@@ -39,7 +39,7 @@ class Game_Map
 		return id_list
 	end
 end
-def find_event_id_xy_name(x,y,event_name,variables)
+def find_event_id_xy_name(x,y,event_name,variables=0)
 	if variables == nil
 		variables = 0
 	end
