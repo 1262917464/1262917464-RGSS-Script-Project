@@ -1,0 +1,63 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 取指定XY坐标上含有关键字的事件 v2021 By 1262917464
+#——————————————————————————
+# 　用法：
+#
+# 　事件内调用脚本find_event_id_xy_name(x,y,name,variables)
+#
+# 　variables替换成储存事件ID的变量ID（可为空
+#
+# 　xy替换成xy坐标
+#
+# 　name替换成关键字，例如你要取出事件名中有[T]的换成"[T]"
+#
+# 　范例：X坐标是13，Y坐标是15，事件名含有[T]，储存在20号变量
+#
+# 　find_event_id_xy_name(13,15,”[T]”,20)
+#
+#	如果想返回到例如@e这样的变量
+#
+#	@e = find_event_id_xy_name(13,15,”[T]”)
+#
+#	更新日志：
+#
+#	2018.05.16 可以按要求取ID，但是XY坐标上无事件会报错
+#
+#	2018.05.18 修复无事件脚本报错，XY无指定事件报错
+#
+#	2021.10.22 许可证转为GPLv3
+#
+#==============================================================================
+class Game_Map
+	def all_event_id_xy(x, y)
+		id_list = []
+		id_list = $game_map.events_xy(x, y)
+		id_list.each_index do |i|
+			id_list[i] = id_list[i].id
+		end
+		return id_list
+	end
+end
+def find_event_id_xy_name(x,y,event_name,variables)
+	if variables == nil
+		variables = 0
+	end
+	id_list = $game_map.all_event_id_xy(x, y)
+	if $game_map.event_id_xy(x,y) != 0 and id_list.size >= 2
+		for i in 0..id_list.size
+			if i == id_list.size
+				break
+			end
+			if $game_map.events[id_list[i]].instance_variable_get(:@event).name.include?(event_name)
+				$game_variables[variables] = id_list[i]
+				return id_list[i]
+			end
+		end
+	else
+		$game_variables[variables] = $game_map.event_id_xy(x,y)
+		return $game_map.event_id_xy(x,y)
+	end
+	$game_variables[variables] = 0
+	return 0
+end
