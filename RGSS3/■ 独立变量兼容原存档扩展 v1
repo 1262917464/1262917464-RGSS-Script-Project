@@ -1,0 +1,20 @@
+#==============================================================================
+# ■ 独立变量兼容原存档扩展 v1 By：六零道长
+#------------------------------------------------------------------------------
+#    本脚本由六零道长编写，授权自由使用，转载请写明出处。
+#    需要 独立变量 5.1 By：六零道长 才能运作
+#==============================================================================
+
+class << DataManager
+  #--------------------------------------------------------------------------
+  # ● 读档内容更改
+  #--------------------------------------------------------------------------
+  alias extract_save_contents_self_variables extract_save_contents
+  def extract_save_contents(contents)
+    extract_save_contents_self_variables(contents)
+    if contents[:self_variables]
+      $game_self_variables = contents[:self_variables]
+    else
+      $game_self_variables = Game_SelfVariables.new 
+  end
+end
