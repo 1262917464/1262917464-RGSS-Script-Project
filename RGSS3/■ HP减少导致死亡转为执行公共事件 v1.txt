@@ -1,0 +1,36 @@
+#encoding:utf-8
+#==============================================================================
+# ■ HP减少导致死亡转为执行公共事件 v1 by 1262917464
+#------------------------------------------------------------------------------
+# 　本脚本由1262917464编写，BSD授权
+#==============================================================================
+
+GAMEOVER_CE = 100 #死亡公共事件
+
+class Game_Interpreter
+  def command_311
+    value = operate_value(@params[2], @params[3], @params[4])
+    iterate_actor_var(@params[0], @params[1]) do |actor|
+      next if actor.dead?
+      actor.change_hp(value, @params[5])
+      actor.perform_collapse_effect if actor.dead?
+    end
+    if $game_party.all_dead?
+      common_event = $data_common_events[GAMEOVER_CE]
+      if common_event
+        child = Game_Interpreter.new
+        child.setup(common_event.list, 0)
+        child.run
+      end
+    end    
+  end
+end
+
+class Scene_Base
+  #--------------------------------------------------------------------------
+  # ● 游戏结束的判定
+  #    如果全灭则切换到游戏结束画面。
+  #--------------------------------------------------------------------------
+  def check_gameover
+  end
+end
