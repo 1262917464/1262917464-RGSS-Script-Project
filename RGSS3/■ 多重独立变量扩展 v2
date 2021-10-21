@@ -1,0 +1,136 @@
+#==============================================================================
+# ■ 多重独立变量扩展 v2 By：1262917464
+#------------------------------------------------------------------------------
+#    本脚本由1262917464编写，非书面另外授权一律GPLv3
+#    需要 独立变量 5.1 By：六零道长 才能运作
+#    且原脚本设置失效
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# 【常量设定】
+#------------------------------------------------------------------------------
+  Self_Vars = [41,42,43,44,45,46,47,48,49,50] 
+  
+  #改成你需要的变量号，
+  #例如想要126号和60号变量为独立变量，
+  #则填[126,60]
+  #可继续扩充数量，例如[126,60,100]
+#------------------------------------------------------------------------------
+def find_Self_Var(i)
+  Self_Vars.each do |j|
+    if i == j
+      return true
+    end
+  end
+  return false
+end
+
+class Game_Event
+  #--------------------------------------------------------------------------
+  # ● 在事件中的初始化
+  #--------------------------------------------------------------------------
+  def initialize(map_id, event)
+    @map_id = map_id
+    @event = event
+    Self_Vars.each{|i|$game_variables[i] = 99999999}
+    shige_didi_initialize(map_id, event)
+  end
+  #--------------------------------------------------------------------------
+  # ● 调整事件页出现条件
+  #--------------------------------------------------------------------------
+  def conditions_met?(page)
+    c = page.condition
+    if c.variable_valid
+      if find_Self_Var(c.variable_id) 
+        return false if $game_self_variables && $game_self_variables[[@map_id, @id, c.variable_id]] < c.variable_value
+      end
+    end
+    return didide_conditions_met?(page)
+  end
+end
+
+class Game_Interpreter
+  #--------------------------------------------------------------------------
+  # ● 调整事件指令中条件分歧
+  #--------------------------------------------------------------------------
+  def command_111
+    if find_Self_Var(@params[1]) && @params[0] == 1 
+      result = false
+      case @params[0]
+      when 1  # 变量
+        value1 = $game_self_variables[[@map_id, @event_id, @params[1]]]
+        if @params[2] == 0
+          value2 = @params[3]
+        else
+          value2 = $game_variables[@params[3]]
+        end
+        case @params[4]
+        when 0  # 等于
+          result = (value1 == value2)
+        when 1  # 以上
+          result = (value1 >= value2)
+        when 2  # 以下
+          result = (value1 <= value2)
+        when 3  # 大于
+          result = (value1 > value2)
+        when 4  # 小于
+          result = (value1 < value2)
+        when 5  # 不等于
+          result = (value1 != value2)
+        end
+      end
+      @branch[@indent] = result
+      command_skip if !@branch[@indent]
+    else
+      old_command_111
+    end
+  end
+  #--------------------------------------------------------------------------
+  # ● 调整事件指令中变量操作
+  #--------------------------------------------------------------------------
+  def command_122
+    value = 0
+    case @params[3]  # 操作方式
+    when 0  # 常量
+      value = @params[4]
+    when 1  # 变量
+      value = find_Self_Var(@params[4]) ? $game_self_variables[[@map_id, @event_id, @params[4]]] : $game_variables[@params[4]]
+    when 2  # 随机数
+      value = @params[4] + rand(@params[5] - @params[4] + 1)
+    when 3  # 游戏数据
+      value = game_data_operand(@params[4], @params[5], @params[6])
+    when 4  # 脚本
+      value = eval(@params[4])
+    end
+    (@params[0]..@params[1]).each do |i|
+      if find_Self_Var(i)
+        operate_self_variable([@map_id, @event_id, i], @params[2], value)
+      else
+        operate_variable(i, @params[2], value)
+      end
+    end
+  end
+  #--------------------------------------------------------------------------
+  # ● 操作变量
+  #--------------------------------------------------------------------------
+  def operate_self_variable(variable_id, operation_type, value)
+    begin
+      case operation_type
+      when 0  # 代入
+        $game_self_variables[variable_id] = value
+      when 1  # 加法
+        $game_self_variables[variable_id] += value
+      when 2  # 减法
+        $game_self_variables[variable_id] -= value
+      when 3  # 乘法
+        $game_self_variables[variable_id] *= value
+      when 4  # 除法
+        $game_self_variables[variable_id] /= value
+      when 5  # 取余
+        $game_self_variables[variable_id] %= value
+      end
+    rescue
+      $game_self_variables[variable_id] = 0
+    end
+  end
+end
