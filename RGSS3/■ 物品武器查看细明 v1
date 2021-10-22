@@ -1,0 +1,167 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 物品/武器查看细明 v1 by 1262917464
+#------------------------------------------------------------------------------
+# 　说明：基于原生脚本大量修改，没有alias的一团屑代码
+# 　与其他读取备注的数据库美化脚本不兼容
+# 　一般来说没有特别情况都是按D键查看
+#------------------------------------------------------------------------------
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#==============================================================================
+
+class Scene_Item < Scene_ItemBase
+  #--------------------------------------------------------------------------
+  # ● 开始处理
+  #--------------------------------------------------------------------------
+  def start
+    super
+    create_category_window
+    create_item_window
+  end
+  #--------------------------------------------------------------------------
+  # ● 生成分类窗口
+  #--------------------------------------------------------------------------
+  def create_category_window
+    @category_window = Window_ItemCategory.new
+    @category_window.viewport = @viewport
+    @category_window.help_window = @help_window
+    @category_window.y = 0#@help_window.height
+    @category_window.set_handler(:ok,     method(:on_category_ok))
+    @category_window.set_handler(:cancel, method(:return_scene))
+  end
+  #--------------------------------------------------------------------------
+  # ● 生成物品窗口
+  #--------------------------------------------------------------------------
+  def create_item_window
+    wy = @category_window.y + @category_window.height
+    wh = Graphics.height - wy
+    @item_window = Window_ItemList.new(0, wy, Graphics.width, wh)
+    @item_window.viewport = @viewport
+    @item_window.help_window = @help_window
+    @item_window.set_handler(:ok,     method(:on_item_ok))
+    @item_window.set_handler(:cancel, method(:on_item_cancel))
+    @item_window.set_handler(:Z, method(:create_help_window))
+    @category_window.item_window = @item_window
+  end
+  #--------------------------------------------------------------------------
+  # ● 物品“取消”
+  #--------------------------------------------------------------------------
+  def on_item_cancel
+    if @help_window and @help_window.open?
+      on_help_cancel
+      return
+    end
+    @item_window.unselect
+    @category_window.activate
+  end
+  #--------------------------------------------------------------------------
+  # ● 生成帮助窗口
+  #--------------------------------------------------------------------------
+  def create_help_window
+    Sound.play_ok
+    @help_window = Window_Help.new
+    @help_window.move(0, Graphics.height/4, Graphics.width, @help_window.fitting_height(8))
+    @help_window.viewport = @viewport
+    @help_window.activate
+    @help_window.set_text(item.note)
+  end
+  def on_help_cancel
+    @help_window.clear
+    @help_window.close#hide.deactivate
+    activate_item_window
+  end
+end
+
+#encoding:utf-8
+#==============================================================================
+# ■ Window_Help
+#------------------------------------------------------------------------------
+# 　显示特技和物品等的说明、以及角色状态的窗口
+#==============================================================================
+
+#~ class Window_Help < Window_Base
+#~   #--------------------------------------------------------------------------
+#~   # ● 初始化对象
+#~   #--------------------------------------------------------------------------
+#~   def initialize(line_number = 8)
+#~     super(0, Graphics.height/4, Graphics.width, fitting_height(line_number))
+#~   end
+#~ end
+
+#encoding:utf-8
+#==============================================================================
+# ■ Window_Selectable
+#------------------------------------------------------------------------------
+# 　拥有光标移动、滚动功能的窗口
+#==============================================================================
+
+class Window_Selectable < Window_Base
+  #--------------------------------------------------------------------------
+  # ● “确定”和“取消”的处理
+  #--------------------------------------------------------------------------
+  def process_handling
+    return unless open? && active
+    return process_ok       if ok_enabled?        && Input.trigger?(:C)
+    return process_cancel   if cancel_enabled?    && Input.trigger?(:B)
+    return process_pagedown if handle?(:pagedown) && Input.trigger?(:R)
+    return process_pageup   if handle?(:pageup)   && Input.trigger?(:L)
+    return call_handler(:Z) if Input.trigger?(:Z)
+  end
+end
+
+#encoding:utf-8
+#==============================================================================
+# ■ Scene_Equip
+#------------------------------------------------------------------------------
+# 　装备画面
+#==============================================================================
+
+class Scene_Equip < Scene_MenuBase
+  #--------------------------------------------------------------------------
+  # ● 生成物品窗口
+  #--------------------------------------------------------------------------
+  def create_item_window
+    wx = 0
+    wy = @slot_window.y + @slot_window.height
+    ww = Graphics.width
+    wh = Graphics.height - wy
+    @item_window = Window_EquipItem.new(wx, wy, ww, wh)
+    @item_window.viewport = @viewport
+    @item_window.help_window = @help_window
+    @item_window.status_window = @status_window
+    @item_window.actor = @actor
+    @item_window.set_handler(:ok,     method(:on_item_ok))
+    @item_window.set_handler(:cancel, method(:on_item_cancel))
+    @item_window.set_handler(:Z, method(:create_item_help_window))
+    @slot_window.item_window = @item_window
+  end
+  #--------------------------------------------------------------------------
+  # ● 物品“取消”
+  #--------------------------------------------------------------------------
+  def on_item_cancel
+    if @item_help_window and @item_help_window.open?
+      on_item_help_cancel
+      return
+    end
+    @slot_window.activate
+    @item_window.unselect
+  end
+  #--------------------------------------------------------------------------
+  # ● 生成帮助窗口
+  #--------------------------------------------------------------------------
+  def create_item_help_window
+    Sound.play_ok
+    @item_help_window = Window_Help.new
+    @item_help_window.move(0, Graphics.height/4, Graphics.width, @item_help_window.fitting_height(8))
+    @item_help_window.viewport = @viewport
+    @item_help_window.activate
+    @item_help_window.set_text(@slot_window.item.note)
+  end
+  def on_item_help_cancel
+    @item_help_window.clear
+    @item_help_window.close#hide.deactivate 
+    @item_window.activate
+  end
+end
