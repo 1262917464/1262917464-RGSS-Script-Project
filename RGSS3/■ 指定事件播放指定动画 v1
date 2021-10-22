@@ -1,0 +1,21 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 指定事件播放指定动画 v1 by 1262917464
+#------------------------------------------------------------------------------
+# 　用法：
+#   events_play_animation(i,a)
+#   i为事件id，a为动画id
+#   例如：3号事件播放5号动画
+#   events_play_animation(3,5)
+#   注：如果需要等待至动画结束，则
+#   events_play_animation(3,5,true)
+#------------------------------------------------------------------------------
+#   本脚本由1262917464编写，BSD 3-Clause “New” or “Revised” 授权
+#==============================================================================
+def events_play_animation(i,a,t=false)
+  character = $game_map.events[i]
+  if character
+    character.animation_id = a
+    Fiber.yield while character.animation_id > 0 if t
+  end
+end
