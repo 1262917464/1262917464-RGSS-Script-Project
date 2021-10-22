@@ -1,0 +1,50 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 动画强制停止脚本 v2 by 1262917464
+#------------------------------------------------------------------------------
+# 　说明：
+#   停止某人上的动画：脚本敲stop_anime(id)，id为0指向玩家，大于0指向事件id
+#
+#   打开开关全局停止某动画：
+#   111 => 126,      打开126号开关会导致111号动画停止/无法播放，开关不会还原
+#------------------------------------------------------------------------------
+#	版权所有（C）<2021> <1262917464>
+#	本程序为自由软件，在自由软件联盟发布的GNU通用公共许可协议的约束下，你可以对其进行再发布及修改。协议版本为第三版或（随你）更新的版本。
+#	我们希望发布的这款程序有用，但不保证，甚至不保证它有经济价值和适合特定用途。详情参见GNU通用公共许可协议。
+#	你理当已收到一份GNU通用公共许可协议的副本，如果没有，请查阅<http://www.gnu.org/licenses/>
+#==============================================================================
+
+Anime_stop_list = {
+  111 => 126,
+}
+
+def stop_anime(id)
+  character = id > 0 ? $game_map.events[id] : $game_player
+  character.anime_stop = true
+end
+
+class Game_CharacterBase
+  attr_accessor :anime_stop             # 动画停止
+end
+
+class Sprite_Base < Sprite
+  alias old_update_animation update_animation
+  def update_animation
+    return unless animation?
+    
+    if @character.anime_stop
+      @character.anime_stop = false
+      end_animation 
+      return
+    end
+    
+    Anime_stop_list.each_key do |key|
+      if key == @character.animation_id && $game_switches[Anime_stop_list[key]]
+         end_animation
+         return
+       end
+     end
+    
+    old_update_animation
+  end
+end
