@@ -1,0 +1,63 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 特定事件穿透 v2 1262917464
+#------------------------------------------------------------------------------
+#   功能：
+# 　打开独立开关/变量时本事件可以穿透所有带关键字的事件
+#   打开全局开关时玩家可以主动/被动穿透所有带关键字的事件
+#
+#   注意
+#   需要 独立变量 5.1 & 多重独立变量扩展 v2
+#------------------------------------------------------------------------------
+#	版权所有（C）<2021> <1262917464>
+#	本程序为自由软件，在自由软件联盟发布的GNU通用公共许可协议的约束下，你可以对其进行再发布及修改。协议版本为第三版或（随你）更新的版本。
+#	我们希望发布的这款程序有用，但不保证，甚至不保证它有经济价值和适合特定用途。详情参见GNU通用公共许可协议。
+#	你理当已收到一份GNU通用公共许可协议的副本，如果没有，请查阅<http://www.gnu.org/licenses/>
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# 【常量设定】
+#------------------------------------------------------------------------------
+#   事件互穿部分
+#------------------------------------------------------------------------------
+Through_Event_Self_Swi = "Z"  #独立开关
+
+Through_events_name = "[T]"   #关键字
+
+Through_Var = 126             #全局/独立变量
+
+Through_Var_values = 100      #变量判断值
+#------------------------------------------------------------------------------
+#   玩家穿透部分
+#------------------------------------------------------------------------------
+Through_Player_Swi_I = 61     #被动穿透开关
+
+Through_Player_Swi_P = 60     #被动穿透开关
+#------------------------------------------------------------------------------
+
+class Game_CharacterBase
+  #--------------------------------------------------------------------------
+  # ● 判定是否与事件碰撞
+  #--------------------------------------------------------------------------
+  def collide_with_events?(x, y)
+    $game_map.events_xy_nt(x, y).any? do |event|
+      if $game_self_switches[[@map_id,@id,Through_Event_Self_Swi]] or (find_Self_Var(Through_Var) ? $game_self_variables[[@map_id, @id, Through_Var]] : $game_variables[Through_Var]) == Through_Var_values
+        return false if self.is_a?(Game_Event) && event.instance_variable_get(:@event).name.include?(Through_events_name)
+      elsif $game_switches[Through_Player_Swi_I]
+        return false if self.is_a?(Game_Player) && event.instance_variable_get(:@event).name.include?(Through_events_name)
+      end
+      (event.normal_priority? || self.is_a?(Game_Event))
+    end
+  end
+end
+
+class Game_Event < Game_Character
+  #--------------------------------------------------------------------------
+  # ● 判定是否与玩家碰撞（包括跟随角色）
+  #--------------------------------------------------------------------------
+  alias old_collide_with_player_characters? collide_with_player_characters?
+  def collide_with_player_characters?(x, y)
+    return false if $game_switches[Through_Player_Swi_P] && self.instance_variable_get(:@event).name.include?(Through_events_name)
+    old_collide_with_player_characters?(x, y)
+  end
+end
