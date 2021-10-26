@@ -1,0 +1,71 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 动画优先级垫底 v1 by 1262917464
+#------------------------------------------------------------------------------
+# 　可以把指定动画优先级垫底。
+#------------------------------------------------------------------------------
+#	版权所有（C）<2021> <1262917464>
+#	本程序为自由软件，在自由软件联盟发布的GNU通用公共许可协议的约束下，你可以对其进行再发布及修改。协议版本为第三版或（随你）更新的版本。
+#	我们希望发布的这款程序有用，但不保证，甚至不保证它有经济价值和适合特定用途。详情参见GNU通用公共许可协议。
+#	你理当已收到一份GNU通用公共许可协议的副本，如果没有，请查阅<http://www.gnu.org/licenses/>
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# 【常量设定】
+#------------------------------------------------------------------------------
+  Animes_down = [112] 
+  
+  #改成你需要的动画号，
+  #例如想要126号和60号动画优先级垫底，
+  #则填[126,60]
+  #可继续扩充数量，例如[126,60,100]
+#------------------------------------------------------------------------------
+
+def animes_down?
+  Animes_down.each do |i|
+    if i == @character.animation_id
+      return true
+    end
+  end
+  false
+end
+
+class Sprite_Base < Sprite
+  #--------------------------------------------------------------------------
+  # ● 设置动画的精灵
+  #     frame : 帧数据（RPG::Animation::Frame）
+  #--------------------------------------------------------------------------
+  def animation_set_sprites(frame)
+    cell_data = frame.cell_data
+    @ani_sprites.each_with_index do |sprite, i|
+      next unless sprite
+      pattern = cell_data[i, 0]
+      if !pattern || pattern < 0
+        sprite.visible = false
+        next
+      end
+      sprite.bitmap = pattern < 100 ? @ani_bitmap1 : @ani_bitmap2
+      sprite.visible = true
+      sprite.src_rect.set(pattern % 5 * 192,
+        pattern % 100 / 5 * 192, 192, 192)
+      if @ani_mirror
+        sprite.x = @ani_ox - cell_data[i, 1]
+        sprite.y = @ani_oy + cell_data[i, 2]
+        sprite.angle = (360 - cell_data[i, 4])
+        sprite.mirror = (cell_data[i, 5] == 0)
+      else
+        sprite.x = @ani_ox + cell_data[i, 1]
+        sprite.y = @ani_oy + cell_data[i, 2]
+        sprite.angle = cell_data[i, 4]
+        sprite.mirror = (cell_data[i, 5] == 1)
+      end
+      sprite.z = self.z + ( animes_down? ? 0 : 300) + i
+      sprite.ox = 96
+      sprite.oy = 96
+      sprite.zoom_x = cell_data[i, 3] / 100.0
+      sprite.zoom_y = cell_data[i, 3] / 100.0
+      sprite.opacity = cell_data[i, 6] * self.opacity / 255.0
+      sprite.blend_type = cell_data[i, 7]
+    end
+  end
+end
