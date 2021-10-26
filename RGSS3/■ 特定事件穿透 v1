@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 特定事件穿透 v1 1262917464
+# ■ 特定事件穿透 v1.1 1262917464
 #------------------------------------------------------------------------------
 # 　打开独立开关时本事件可以穿透所有带关键字的事件
 #------------------------------------------------------------------------------
@@ -20,8 +20,8 @@ class Game_CharacterBase
   #--------------------------------------------------------------------------
   def collide_with_events?(x, y)
     $game_map.events_xy_nt(x, y).any? do |event|
-      if self.is_a?(Game_Event)
-        return false if $game_self_switches[[@map_id,@id,Through_self_swi]] && event.instance_variable_get(:@event).name.include?(Through_events_name)
+      if $game_self_switches[[@map_id,@id,Through_self_swi]]
+        return false if self.is_a?(Game_Event) && event.instance_variable_get(:@event).name.include?(Through_events_name)
       end
       (event.normal_priority? || self.is_a?(Game_Event))
     end
