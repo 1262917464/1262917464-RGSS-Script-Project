@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 事件页召唤扩展 v1 1262917464
+# ■ 事件页召唤扩展 v1.1 1262917464
 #------------------------------------------------------------------------------
 #   说明:
 #   call_events_xy(x,y,key,page)
@@ -22,6 +22,6 @@
 def call_events_xy(x,y,key,page)
   id_list = $game_map.all_event_id_xy(x,y)
   id list.each do |id|
-    call_map_event(id,page) if $game_map.events[id_list[id]].instance_variable_get(:@event).name.include?(key)
+    call_map_event(id,page) if $game_map.events[id].instance_variable_get(:@event).name.include?(key)
   end
 end
