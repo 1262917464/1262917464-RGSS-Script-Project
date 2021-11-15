@@ -1,13 +1,13 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 事件页召唤扩展 v1.1 1262917464
+# ■ 事件页召唤扩展 v1.2 1262917464
 #------------------------------------------------------------------------------
 #   说明:
 #   call_events_xy(x,y,key,page)
 #   在xy坐标上的所有名字带key的事件会执行第page页
 #
 #   例如:
-#   call events xy(1,2,"[T]",6)
+#   call_events_xy(1,2,"[T]",6)
 #   会执行x=1,y=2上所有名字带[T]的事件的第6页
 #
 #   注意
@@ -21,7 +21,8 @@
 
 def call_events_xy(x,y,key,page)
   id_list = $game_map.all_event_id_xy(x,y)
-  id list.each do |id|
+  return if $game_map.event_id_xy(x,y) == 0 and id_list.size < 1
+  id_list.each do |id|
     call_map_event(id,page) if $game_map.events[id].instance_variable_get(:@event).name.include?(key)
   end
 end
