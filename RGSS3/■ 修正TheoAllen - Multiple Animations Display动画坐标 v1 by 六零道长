@@ -1,0 +1,48 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 修正TheoAllen - Multiple Animations Display动画坐标 v1 by 六零道长
+#------------------------------------------------------------------------------
+# 　本脚本由六零道长编写，MIT授权
+#==============================================================================
+class Sprite_MultiAnime < Sprite_Base
+  def character
+    return ref_sprite.instance_variable_get(:@character)
+  end
+end
+
+class Sprite_Character
+  alias theo_multianim2_init initialize
+  def initialize(viewport, char = nil)
+    @oldx = 0; @oldy = 0;
+    @oldx = char.screen_x if char
+    @oldy = char.screen_y if char
+    theo_multianim2_init(viewport, char)
+  end
+
+  alias theo_multianime_update_position update_position
+  def update_position
+    move_animation(self.x - @oldx, self.y - @oldy)
+    @oldx = self.x
+    @oldy = self.y
+    theo_multianime_update_position
+  end
+
+  def move_animation(dx, dy)
+    if @animation && @animation.position != 3
+      @ani_ox += dx
+      @ani_oy += dy
+      @ani_sprites.each do |sprite|
+        sprite.x += dx
+        sprite.y += dy
+      end
+      @multianimes.each do |anis|
+        anis.ani_ox += dx
+        anis.ani_oy += dy
+        anis.ani_sprites.each do |sprite|
+          sprite.x += dx
+          sprite.y += dy
+        end
+      end
+    end
+  end
+end
