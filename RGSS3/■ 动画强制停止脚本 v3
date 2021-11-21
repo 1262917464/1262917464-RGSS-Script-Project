@@ -36,7 +36,6 @@ class Sprite_Character < Sprite_Base
   def update
     if ($imported ||= {})[:Theo_MultiAnime]
       @multianimes.each do |anime| 
-        p anime.instance_variable_get(:@character).anime_stop 
         if anime.instance_variable_get(:@character).anime_stop 
           anime.end_animation
         end
