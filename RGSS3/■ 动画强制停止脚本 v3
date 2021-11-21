@@ -1,0 +1,106 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 动画强制停止脚本 v3 by 1262917464
+#------------------------------------------------------------------------------
+# 　说明：
+#   停止某人上的动画：脚本敲stop_anime(id)，id为0指向玩家，大于0指向事件id
+#
+#   打开开关全局停止某动画：
+#   111 => 126,      打开126号开关会导致111号动画停止/无法播放，开关不会还原
+#
+#   兼容 TheoAllen - Multiple Animations Display
+#   请放到该脚本之下
+#
+#   请看完该脚本说明，下面还有设置
+#------------------------------------------------------------------------------
+#	版权所有（C）<2021> <1262917464>
+#	本程序为自由软件，在自由软件联盟发布的GNU通用公共许可协议的约束下，你可以对其进行再发布及修改。协议版本为第三版或（随你）更新的版本。
+#	我们希望发布的这款程序有用，但不保证，甚至不保证它有经济价值和适合特定用途。详情参见GNU通用公共许可协议。
+#	你理当已收到一份GNU通用公共许可协议的副本，如果没有，请查阅<http://www.gnu.org/licenses/>
+#==============================================================================
+Anime_stop_list = {
+  193 => 998,
+}
+
+def stop_anime(id)
+  character = id > 0 ? $game_map.events[id] : $game_player
+  character.anime_stop = true
+end
+
+class Game_CharacterBase
+  attr_accessor :anime_stop             # 动画停止
+end
+
+class Sprite_Character < Sprite_Base
+  alias anime_stop_update update
+  def update
+    if ($imported ||= {})[:Theo_MultiAnime]
+      @multianimes.each do |anime| 
+        p anime.instance_variable_get(:@character).anime_stop 
+        if anime.instance_variable_get(:@character).anime_stop 
+          anime.end_animation
+        end
+        
+        Anime_stop_list.each_key do |key|
+          if key == anime.instance_variable_get(:@character).animation_id && $game_switches[Anime_stop_list[key]]
+            end_animation
+            return
+          end
+        end
+      end
+      character.anime_stop = false
+    end
+    if character.anime_stop
+      character.anime_stop = false
+      end_animation 
+      return
+    end
+    Anime_stop_list.each_key do |key|
+      if key == character.animation_id && $game_switches[Anime_stop_list[key]]
+        end_animation
+        return
+      end
+    end
+    anime_stop_update
+  end
+end
+
+#>>>>>>>>>>>>>如果有 TheoAllen - Multiple Animations Display 特化版
+#>>>>>>>>>>>>>请删除以下全部内容
+if ($imported ||= {})[:Theo_MultiAnime]
+#==============================================================================
+# Sprite multiple animation
+#------------------------------------------------------------------------------
+class Sprite_MultiAnime < Sprite_Base
+  attr_accessor :character
+  alias theo_multianime_initialize initialize
+  def initialize(viewport, ref_sprite, anime, flip = false,character = nil)
+    @character = character
+    theo_multianime_initialize(viewport, ref_sprite, anime, flip)
+  end
+end
+
+#==============================================================================
+# Sprite Character
+#------------------------------------------------------------------------------
+class Sprite_Character
+  def start_animation(anime, flip = false)
+    if @animation
+      spr_anim = Sprite_MultiAnime.new(viewport, self, anime, flip,@character)
+      multianimes.push(spr_anim)
+    else
+      theo_multianime_start_anim(anime, flip)
+      multianime = @animation.anime_links
+      check_multi = Theo::MultiAnime::AnimeList[@animation.id]
+      if check_multi.is_a?(Array)
+        multianime += check_multi
+      elsif check_multi
+        multianime += [check_multi]
+      end
+      multianime.each do |ma|
+        start_animation($data_animations[ma], flip)
+      end
+    end
+  end
+end
+end
