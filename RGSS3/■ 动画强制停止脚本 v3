@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 动画强制停止脚本 v3 by 1262917464
+# ■ 动画强制停止脚本 v3.1 by 1262917464
 #------------------------------------------------------------------------------
 # 　说明：
 #   停止某人上的动画：脚本敲stop_anime(id)，id为0指向玩家，大于0指向事件id
@@ -10,8 +10,6 @@
 #
 #   兼容 TheoAllen - Multiple Animations Display
 #   请放到该脚本之下
-#
-#   请看完该脚本说明，下面还有设置
 #------------------------------------------------------------------------------
 #	版权所有（C）<2021> <1262917464>
 #	本程序为自由软件，在自由软件联盟发布的GNU通用公共许可协议的约束下，你可以对其进行再发布及修改。协议版本为第三版或（随你）更新的版本。
@@ -36,12 +34,13 @@ class Sprite_Character < Sprite_Base
   def update
     if ($imported ||= {})[:Theo_MultiAnime]
       @multianimes.each do |anime| 
-        if anime.instance_variable_get(:@character).anime_stop 
+#~         p anime.instance_variable_get(:@ref_sprite).character.anime_stop 
+        if anime.instance_variable_get(:@ref_sprite).character.anime_stop 
           anime.end_animation
         end
         
         Anime_stop_list.each_key do |key|
-          if key == anime.instance_variable_get(:@character).animation_id && $game_switches[Anime_stop_list[key]]
+          if key == anime.instance_variable_get(:@ref_sprite).character.animation_id && $game_switches[Anime_stop_list[key]]
             end_animation
             return
           end
@@ -62,44 +61,4 @@ class Sprite_Character < Sprite_Base
     end
     anime_stop_update
   end
-end
-
-#>>>>>>>>>>>>>如果有 TheoAllen - Multiple Animations Display 特化版
-#>>>>>>>>>>>>>请删除以下全部内容
-if ($imported ||= {})[:Theo_MultiAnime]
-#==============================================================================
-# Sprite multiple animation
-#------------------------------------------------------------------------------
-class Sprite_MultiAnime < Sprite_Base
-  attr_accessor :character
-  alias theo_multianime_initialize initialize
-  def initialize(viewport, ref_sprite, anime, flip = false,character = nil)
-    @character = character
-    theo_multianime_initialize(viewport, ref_sprite, anime, flip)
-  end
-end
-
-#==============================================================================
-# Sprite Character
-#------------------------------------------------------------------------------
-class Sprite_Character
-  def start_animation(anime, flip = false)
-    if @animation
-      spr_anim = Sprite_MultiAnime.new(viewport, self, anime, flip,@character)
-      multianimes.push(spr_anim)
-    else
-      theo_multianime_start_anim(anime, flip)
-      multianime = @animation.anime_links
-      check_multi = Theo::MultiAnime::AnimeList[@animation.id]
-      if check_multi.is_a?(Array)
-        multianime += check_multi
-      elsif check_multi
-        multianime += [check_multi]
-      end
-      multianime.each do |ma|
-        start_animation($data_animations[ma], flip)
-      end
-    end
-  end
-end
 end
