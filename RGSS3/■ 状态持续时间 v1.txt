@@ -1,0 +1,60 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 状态持续时间 v1 by 1262917464
+#------------------------------------------------------------------------------
+#    本事件由1262917464编写，非书面另外授权一律GPLv3
+#    使用方法：
+#    在状态备注中写<Time X>就是状态持续X帧后消失（1秒=60帧）
+#    写<Time_STOP Y>就是Y开关打开时X状态计时暂停（可选）
+#==============================================================================
+
+class Scene_Map < Scene_Base
+  alias state_time_update update
+  def update
+    state_time_update
+    leader = $game_actors[$game_party.leader.id]
+    leader.states.each do |state| 
+      if state.note =~ /<Time\s*(\d+)>/ 
+#~         p "时间控制：#{leader.get_status_time(state.id)}"
+        next if state.note =~ /<Time_STOP\s*(\d+)>/ ? $game_switches[$1.to_i] : false
+        if leader.get_status_time(state.id) <= 0
+          leader.erase_state(state.id) 
+        else
+          leader.set_status_time(state.id,leader.get_status_time(state.id) - 1)
+        end
+      end
+    end
+  end
+end
+
+class Game_Battler < Game_BattlerBase
+  attr_accessor :status_time
+  alias status_time_initialize initialize
+  def initialize
+    status_time_initialize
+    @status_time = Game_Variables.new
+  end
+  def get_status_time(id)
+    @status_time = Game_Variables.new if @status_time == nil
+    @status_time[id]
+  end
+  def set_status_time(id,v)
+    @status_time = Game_Variables.new if @status_time == nil
+    @status_time[id] = v
+  end
+end
+
+#==============================================================================
+# ■ Game_Battler
+#------------------------------------------------------------------------------
+# 　处理战斗者的类。Game_Actor 和 Game_Enemy 类的父类。
+#==============================================================================
+
+class Game_Battler < Game_BattlerBase
+  alias state_time_add_state add_state
+  def add_state(state_id)
+    state_time_add_state(state_id)
+    $data_states[state_id].note =~ /<Time\s*(\d+)>/ 
+    set_status_time(state_id,$1.to_i)
+  end
+end
