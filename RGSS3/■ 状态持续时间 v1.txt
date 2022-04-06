@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 状态持续时间 v1 by 1262917464
+# ■ 状态持续时间 v1.1 by 1262917464
 #------------------------------------------------------------------------------
 #    本事件由1262917464编写，非书面另外授权一律GPLv3
 #    使用方法：
@@ -12,15 +12,16 @@ class Scene_Map < Scene_Base
   alias state_time_update update
   def update
     state_time_update
-    leader = $game_actors[$game_party.leader.id]
-    leader.states.each do |state| 
-      if state.note =~ /<Time\s*(\d+)>/ 
-#~         p "时间控制：#{leader.get_status_time(state.id)}"
-        next if state.note =~ /<Time_STOP\s*(\d+)>/ ? $game_switches[$1.to_i] : false
-        if leader.get_status_time(state.id) <= 0
-          leader.erase_state(state.id) 
-        else
-          leader.set_status_time(state.id,leader.get_status_time(state.id) - 1)
+    $game_party.all_members.each do |actor|
+      actor.states.each do |state| 
+        if state.note =~ /<Time\s*(\d+)>/ 
+#~           p "#{actor.name} 状态#{state.id} 持续时间：#{actor.get_status_time(state.id)}"
+          next if state.note =~ /<Time_STOP\s*(\d+)>/ ? $game_switches[$1.to_i] : false
+          if actor.get_status_time(state.id) <= 0
+            actor.erase_state(state.id) 
+          else
+            actor.set_status_time(state.id,actor.get_status_time(state.id) - 1)
+          end
         end
       end
     end
