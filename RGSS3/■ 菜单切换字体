@@ -1,0 +1,67 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 菜单切换字体 v1 by 1262917464
+#------------------------------------------------------------------------------
+#   本脚本授权为GPLv3或者更高版本
+#------------------------------------------------------------------------------
+# 　使用方法：
+#   在Fonts写字体数组，Fonts_Sizes部分照猫画虎就好（
+#   要修改文案的话在 #菜单显示选项文字 修改
+#   对整个游戏有效（也就是跨存档）
+#
+#   注意：
+#   请不要在该脚本以外定义 Font.default_name 和 Font.default_size
+#   该脚本已经定义过一次了（
+#==============================================================================
+
+Fonts = ["BakaFont","WenQuanYi_Bitmap_Song_12"]
+
+Fonts_Sizes = {
+  "BakaFont" => 16,
+  "WenQuanYi_Bitmap_Song_12" => 18,
+}
+
+class CFonts
+  attr_accessor :font_index
+  def initialize
+    @font_index = 0
+  end
+  def next_font
+    @font_index = @font_index + 1
+    @font_index = 0 if @font_index >= Fonts.length
+    Fonts[@font_index]
+  end
+  def now_font
+    Fonts[@font_index]
+  end
+end
+
+$cfont = FileTest.exist?("data/Cfont.rvdata2") ? load_data("data/Cfont.rvdata2") : CFonts.new 
+
+class Window_MenuCommand < Window_Command
+  alias change_font_add_original_commands add_original_commands
+  def add_original_commands
+    add_command("切换字体",   :change_font,   true) #菜单显示选项文字
+  end
+end
+
+class Scene_Menu < Scene_MenuBase
+  #--------------------------------------------------------------------------
+  # ● 生成指令窗口
+  #--------------------------------------------------------------------------
+  alias change_font_create_command_window create_command_window
+  def create_command_window
+    change_font_create_command_window
+    @command_window.set_handler(:change_font,      method(:change_font))
+  end
+  
+  def change_font
+    Font.default_name = $cfont.next_font
+    Font.default_size = Fonts_Sizes[$cfont.now_font]
+    save_data($cfont,"data/Cfont.rvdata2")
+    return_scene
+  end
+end
+
+Font.default_name = $cfont.now_font
+Font.default_size = Fonts_Sizes[$cfont.now_font]
