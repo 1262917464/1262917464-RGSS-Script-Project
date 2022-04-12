@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 菜单切换字体 v1 by 1262917464
+# ■ 菜单切换字体 v1.01 by 1262917464
 #------------------------------------------------------------------------------
 #   本脚本授权为GPLv3或者更高版本
 #------------------------------------------------------------------------------
@@ -41,6 +41,7 @@ $cfont = FileTest.exist?("data/Cfont.rvdata2") ? load_data("data/Cfont.rvdata2")
 class Window_MenuCommand < Window_Command
   alias change_font_add_original_commands add_original_commands
   def add_original_commands
+    change_font_add_original_commands
     add_command("切换字体",   :change_font,   true) #菜单显示选项文字
   end
 end
