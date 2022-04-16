@@ -20,9 +20,9 @@ class Scene_ItemSynthesis < Scene_MenuBase
   #--------------------------------------------------------------------------
   # ● 合成の実行
   #--------------------------------------------------------------------------
+  alias do_syntetic_w do_syntetic
   def do_syntetic(number)
     $game_party.lose_gold(number * buying_price)
-    $game_party.gain_item(@item, number)
     
     @recipe = @list_window.recipe(@item)
     for i in 1...@recipe.size
@@ -30,7 +30,9 @@ class Scene_ItemSynthesis < Scene_MenuBase
       id   = @recipe[i][1]
       num  = @recipe[i][2]
       if kind == "W"
-        $game_actors[who_equip_weapon(id)].change_equip_by_id(0,@item.id) if who_equip_weapon(id) > 0 and @category_window.instance_variable_get(:@category) == :weapon
+        return do_syntetic_w(number) if who_equip_weapon(id) <= 0 and @category_window.instance_variable_get(:@category) != :weapon
+        $game_party.gain_item(@item, number)
+        $game_actors[who_equip_weapon(id)].change_equip_by_id(0,@item.id)
         item = $data_weapons[id]
       elsif kind == "I"
         item = $data_items[id]
