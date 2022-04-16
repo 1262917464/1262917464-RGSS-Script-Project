@@ -29,8 +29,6 @@ class Scene_ItemSynthesis < Scene_MenuBase
   #--------------------------------------------------------------------------
   alias do_syntetic_w do_syntetic
   def do_syntetic(number)
-    $game_party.lose_gold(number * buying_price)
-    
     @recipe = @list_window.recipe(@item)
     for i in 1...@recipe.size
       kind = @recipe[i][0]
@@ -51,6 +49,7 @@ class Scene_ItemSynthesis < Scene_MenuBase
       end
       $game_party.lose_item(item, num*number)
     end
+    $game_party.lose_gold(number * buying_price)
   end
 end
 
