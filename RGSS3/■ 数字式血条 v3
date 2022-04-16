@@ -1,0 +1,110 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 数字式血条 v3 by 1262917464
+#------------------------------------------------------------------------------
+#    本事件由1262917464编写，非书面另外授权一律GPLv3
+#==============================================================================
+
+$HPBOX = 27 #血条显示开关
+
+class Scene_Map < Scene_Base
+  alias old_post_start post_start
+  def post_start
+    old_post_start
+    
+    if $HPB == nil || $HPB.disposed?
+      $HPB = Bitmap.new(200,480)
+      f = Font.new("Sarasa Fixed SC")
+      $HPB.font = f
+      
+      $HPB.font.color.set(240,192,64,255)
+      $HPB.draw_text(50,5,100,50,"HP")
+      $HPB.draw_text(50,25,100,50,"MP")
+      $HPB.font.color.set(255,255,255,255)
+      $HPB.draw_text(50,5,100,50,"  ：")
+      $HPB.draw_text(50,25,100,50,"  ：")
+    end
+    
+    $hps = Sprite.new
+    $hps.visible = $game_switches[$HPBOX]
+    $hps.bitmap = $HPB
+    
+    leader = $data_actors[$game_party.leader.id]
+    
+    pb = Cache.character(leader.character_name)
+    n = leader.character_index
+    sign = leader.character_name[/^[\!\$]./]
+    if sign && sign.include?('$')
+      cw = pb.width / 3
+      ch = pb.height / 4
+    else
+      cw = pb.width / 12
+      ch = pb.height / 8
+    end
+    pbr = Rect.new((n%4*3+1)*cw, (n/4*4)*ch, cw, ch)
+    $HPB.clear_rect(0,0,pbr.width,pbr.height)
+    $HPB.blt(0, 0, pb, pbr)
+    
+    @icons_r = Rect.new(0, 64, 480, 24)
+  end
+  
+  #--------------------------------------------------------------------------
+  # ● 更新画面
+  #--------------------------------------------------------------------------
+  alias old_update update
+  def update
+    old_update
+    if $HPB != nil
+      @leader = $data_actors[$game_party.leader.id]
+      if @leader_last != @leader
+        character = Cache.character(@leader.character_name)
+        n = @leader.character_index
+        sign = @leader.character_name[/^[\!\$]./]
+        if sign && sign.include?('$')
+          cw = character.width / 3
+          ch = character.height / 4
+        else
+          cw = character.width / 12
+          ch = character.height / 8
+        end
+        character_rect = Rect.new((n%4*3+1)*cw, (n/4*4)*ch, cw, ch)
+        $HPB.clear_rect(0,0,character_rect.width,character_rect.height)
+        $HPB.blt(0, 0, character, character_rect)
+      end
+      @leader_last = @leader
+      if @hp_l != $game_party.leader.hp
+        $HPB.clear_rect(78,20,100,20)
+        hp = $game_party.leader.hp
+        $HPB.font.color.set(255,32,32,255)
+        $HPB.draw_text(50,5,100,50,"    #{hp}")
+        @hp_l = hp
+      end
+      if @mp_l != $game_party.leader.mp
+        mp = $game_party.leader.mp
+        $HPB.clear_rect(78,40,100,20)
+        $HPB.font.color.set(32,160,214,255)
+        $HPB.draw_text(50,25,100,50,"    #{mp}")
+        @mp_l = mp
+      end
+      $HPB.clear_rect(@icons_r)
+      draw_actor_icons($game_actors[$game_party.leader.id], @icons_r.x, @icons_r.y)
+    end
+    if $hps
+      $hps.visible = $game_switches[$HPBOX]
+    end
+  end
+  
+  def draw_icon(icon_index, x, y, tar_bitmap)
+    bitmap = Cache.system("Iconset")
+    rect = Rect.new(icon_index % 16 * 24, icon_index / 16 * 24, 24, 24)
+    tar_bitmap.blt(x, y, bitmap, rect)
+  end
+  #--------------------------------------------------------------------------
+  # ● 绘制强化／弱化状态的图标
+  #--------------------------------------------------------------------------
+  def draw_actor_icons(actor, x, y)
+    icons = actor.state_icons + actor.buff_icons
+    icons.each_with_index {|n, i| draw_icon(n, x + 24 * i, y, $HPB) }
+  end
+  
+end
