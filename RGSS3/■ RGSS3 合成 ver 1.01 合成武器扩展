@@ -1,0 +1,80 @@
+#==============================================================================
+# ■ RGSS3 合成 ver 1.01 合成武器扩展 v0.9 by 1262917464
+#------------------------------------------------------------------------------
+# 　可以直接合成在装备栏里的武器
+#   但是合成材料必须只有一个武器物品（
+#   存在一个BUG：武器在装备栏时，材料数量界面显示不太正常，但不影响合成
+#   该脚本请插在 RGSS3 合成 ver 1.01 下面
+#------------------------------------------------------------------------------
+#   本脚本授权为GPLv3或者更高版本
+#==============================================================================
+
+def who_equip_weapon(id)
+  $game_party.all_members.each do |actor|
+    return actor.id if actor.weapons.include?($data_weapons[id])
+  end
+  0
+end
+
+class Scene_ItemSynthesis < Scene_MenuBase
+  #--------------------------------------------------------------------------
+  # ● 合成の実行
+  #--------------------------------------------------------------------------
+  def do_syntetic(number)
+    $game_party.lose_gold(number * buying_price)
+    $game_party.gain_item(@item, number)
+    
+    @recipe = @list_window.recipe(@item)
+    for i in 1...@recipe.size
+      kind = @recipe[i][0]
+      id   = @recipe[i][1]
+      num  = @recipe[i][2]
+      if kind == "W"
+        $game_actors[who_equip_weapon(id)].change_equip_by_id(0,@item.id) if who_equip_weapon(id) > 0 and @category_window.instance_variable_get(:@category) == :weapon
+        item = $data_weapons[id]
+      elsif kind == "I"
+        item = $data_items[id]
+      elsif kind == "A"
+        item = $data_armors[id]
+      end
+      $game_party.lose_item(item, num*number)
+    end
+  end
+end
+
+#==============================================================================
+# ■ Window_ItemSynthesisList
+#------------------------------------------------------------------------------
+# 　合成画面で、合成可能なアイテムの一覧を表示するウィンドウです。
+#==============================================================================
+
+class Window_ItemSynthesisList < Window_Selectable
+  attr_accessor :category
+  #--------------------------------------------------------------------------
+  # ● アイテムを許可状態で表示するかどうか
+  #--------------------------------------------------------------------------
+  def have_mat?(recipe)
+    flag = true
+    if @money >= recipe[0]
+      for i in 1...recipe.size
+        kind = recipe[i][0]
+        id   = recipe[i][1]
+        num  = recipe[i][2]
+        if kind == "I"
+          item = $data_items[id]
+        elsif kind == "W"
+          return true if who_equip_weapon(id) > 0 and @category == :weapon
+          item = $data_weapons[id]
+        elsif kind == "A"
+          item = $data_armors[id]
+        end
+        if $game_party.item_number(item) < [num, 1].max
+          flag = false
+        end
+      end
+    else
+      flag = false
+    end
+    return flag
+  end
+end
