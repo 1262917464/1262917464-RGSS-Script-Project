@@ -1,9 +1,9 @@
 #==============================================================================
-# ■ RGSS3 合成 ver 1.01 合成武器扩展 v0.9 by 1262917464
+# ■ RGSS3 合成 ver 1.01 合成武器扩展 v0.91 by 1262917464
 #------------------------------------------------------------------------------
-# 　可以直接合成在装备栏里的武器
-#   但是合成材料必须只有一个武器物品（
-#   存在一个BUG：武器在装备栏时，材料数量界面显示不太正常，但不影响合成
+# 　可以直接合成在装备栏里的武器/副武器
+#   但是合成材料必须只有一个武器/副武器物品（
+#   存在一个BUG：武器/副武器在装备栏时，材料数量界面显示不太正常，但不影响合成
 #   该脚本请插在 RGSS3 合成 ver 1.01 下面
 #------------------------------------------------------------------------------
 #   本脚本授权为GPLv3或者更高版本
@@ -12,6 +12,13 @@
 def who_equip_weapon(id)
   $game_party.all_members.each do |actor|
     return actor.id if actor.weapons.include?($data_weapons[id])
+  end
+  0
+end
+
+def who_equip_armor(id)
+  $game_party.all_members.each do |actor|
+    return actor.id if actor.armors.include?($data_armors[id])
   end
   0
 end
@@ -34,10 +41,13 @@ class Scene_ItemSynthesis < Scene_MenuBase
         $game_party.gain_item(@item, number)
         $game_actors[who_equip_weapon(id)].change_equip_by_id(0,@item.id)
         item = $data_weapons[id]
+      elsif kind == "A"
+        return do_syntetic_w(number) if who_equip_armor(id) <= 0 and @category_window.instance_variable_get(:@category) != :armor
+        $game_party.gain_item(@item, number)
+        $game_actors[who_equip_armor(id)].change_equip_by_id(1,@item.id)
+        item = $data_armors[id]
       elsif kind == "I"
         item = $data_items[id]
-      elsif kind == "A"
-        item = $data_armors[id]
       end
       $game_party.lose_item(item, num*number)
     end
@@ -68,6 +78,7 @@ class Window_ItemSynthesisList < Window_Selectable
           return true if who_equip_weapon(id) > 0 and @category == :weapon
           item = $data_weapons[id]
         elsif kind == "A"
+          return true if who_equip_armor(id) > 0 and @category == :armor
           item = $data_armors[id]
         end
         if $game_party.item_number(item) < [num, 1].max
