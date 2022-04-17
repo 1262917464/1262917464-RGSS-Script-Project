@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 事件页召唤扩展 v1.2 1262917464
+# ■ 事件页召唤扩展 v1.3 1262917464
 #------------------------------------------------------------------------------
 #   说明:
 #   call_events_xy(x,y,key,page)
@@ -9,6 +9,9 @@
 #   例如:
 #   call_events_xy(1,2,"[T]",6)
 #   会执行x=1,y=2上所有名字带[T]的事件的第6页
+#
+#   call_events_xy_NoSelfC(x,y,key,page)
+#   执行xy上的一个没开启独立开关C的事件某一页
 #
 #   注意
 #   需要 イベント呼び出しスクリプト & 取指定XY坐标上含有关键字的事件
@@ -24,5 +27,13 @@ def call_events_xy(x,y,key,page)
   return if $game_map.event_id_xy(x,y) == 0 and id_list.size < 1
   id_list.each do |id|
     call_map_event(id,page) if $game_map.events[id].instance_variable_get(:@event).name.include?(key)
+  end
+end
+
+def call_event_xy_NoSelfC(x,y,key,page)
+  id_list = $game_map.all_event_id_xy(x,y)
+  return if $game_map.event_id_xy(x,y) == 0 and id_list.size < 1
+  id_list.each do |id|
+    return call_map_event(id,page) if $game_map.events[id].instance_variable_get(:@event).name.include?(key) and !$game_self_switcheskey[[@map_id, id, "C"]]
   end
 end
