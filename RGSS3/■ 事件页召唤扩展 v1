@@ -10,7 +10,7 @@
 #   call_events_xy(1,2,"[T]",6)
 #   会执行x=1,y=2上所有名字带[T]的事件的第6页
 #
-#   call_events_xy_NoSelfC(x,y,key,page)
+#   call_event_xy_NoSelfC(x,y,key,page)
 #   执行xy上的一个没开启独立开关C的事件某一页
 #
 #   注意
