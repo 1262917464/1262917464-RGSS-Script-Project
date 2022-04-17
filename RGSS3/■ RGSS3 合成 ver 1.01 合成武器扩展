@@ -1,5 +1,5 @@
 #==============================================================================
-# ■ RGSS3 合成 ver 1.01 合成武器扩展 v0.91 by 1262917464
+# ■ RGSS3 合成 ver 1.01 合成武器扩展 v0.92 by 1262917464
 #------------------------------------------------------------------------------
 # 　可以直接合成在装备栏里的武器/副武器
 #   但是合成材料必须只有一个武器/副武器物品（
@@ -74,15 +74,15 @@ class Window_ItemSynthesisList < Window_Selectable
         if kind == "I"
           item = $data_items[id]
         elsif kind == "W"
-          return true if who_equip_weapon(id) > 0 and @category == :weapon
           item = $data_weapons[id]
         elsif kind == "A"
-          return true if who_equip_armor(id) > 0 and @category == :armor
           item = $data_armors[id]
         end
         if $game_party.item_number(item) < [num, 1].max
           flag = false
         end
+        flag = true if who_equip_weapon(id) > 0 and @category == :weapon
+        flag = true if who_equip_armor(id) > 0 and @category == :armor
       end
     else
       flag = false
