@@ -1,9 +1,11 @@
 #==============================================================================
-# ■ RGSS3 合成 ver 1.01 合成武器扩展 v0.93 by 1262917464
+# ■ RGSS3 合成 ver 1.01 合成武器扩展 v0.94 by 1262917464
 #------------------------------------------------------------------------------
 # 　可以直接合成在装备栏里的武器/副武器
 #   但是合成材料必须只有一个武器/副武器物品（
 #   0.93更新：那个BUG修了（
+#   0.94更新：修复合成普通物品光用材料不出东西的BUG
+#             以及在写错情况下能跑起来的BUG（）
 #   该脚本请插在 RGSS3 合成 ver 1.01 下面
 #------------------------------------------------------------------------------
 #   本脚本授权为GPLv3或者更高版本
@@ -29,18 +31,19 @@ class Scene_ItemSynthesis < Scene_MenuBase
   #--------------------------------------------------------------------------
   alias do_syntetic_w do_syntetic
   def do_syntetic(number)
+    return do_syntetic_w(number) if @list_window.instance_variable_get(:@category) != :weapon and @list_window.instance_variable_get(:@category) != :armor
     @recipe = @list_window.recipe(@item)
     for i in 1...@recipe.size
       kind = @recipe[i][0]
       id   = @recipe[i][1]
       num  = @recipe[i][2]
       if kind == "W"
-        return do_syntetic_w(number) if who_equip_weapon(id) <= 0 and @category_window.instance_variable_get(:@category) != :weapon
+        return do_syntetic_w(number) if who_equip_weapon(id) <= 0 and @list_window.instance_variable_get(:@category) != :weapon
         $game_party.gain_item(@item, number)
         $game_actors[who_equip_weapon(id)].change_equip_by_id(0,@item.id)
         item = $data_weapons[id]
       elsif kind == "A"
-        return do_syntetic_w(number) if who_equip_armor(id) <= 0 and @category_window.instance_variable_get(:@category) != :armor
+        return do_syntetic_w(number) if who_equip_armor(id) <= 0 and @list_window.instance_variable_get(:@category) != :armor
         $game_party.gain_item(@item, number)
         $game_actors[who_equip_armor(id)].change_equip_by_id(1,@item.id)
         item = $data_armors[id]
