@@ -1,5 +1,5 @@
 #==============================================================================
-# ■ RGSS3 合成 ver 1.01 合成武器扩展 v1.0 by 1262917464
+# ■ RGSS3 合成 ver 1.01 合成武器扩展 v1.1 by 1262917464
 #------------------------------------------------------------------------------
 # 　可以直接合成在装备栏里的武器/副武器
 #   但是合成材料必须只有一个武器/副武器物品（
@@ -7,6 +7,7 @@
 #   0.94更新：修复合成普通物品光用材料不出东西的BUG
 #             以及在写错情况下能跑起来的BUG（）
 #   1.0更新：优雅的重制了合成逻辑
+#   1.1更新：修正了莫名其妙的可以合成的BUG
 #   该脚本请插在 RGSS3 合成 ver 1.01 下面
 #------------------------------------------------------------------------------
 #   本脚本授权为GPLv3或者更高版本
@@ -81,8 +82,8 @@ class Window_ItemSynthesisList < Window_Selectable
         if $game_party.item_number(item) < [num, 1].max
           flag = false
         end
-        flag = true if who_equip_weapon(id) > 0 and @category == :weapon
-        flag = true if who_equip_armor(id) > 0 and @category == :armor
+        flag = true if who_equip_weapon(id) > 0 and @category == :weapon and kind == "W"
+        flag = true if who_equip_armor(id) > 0 and @category == :armor and kind == "A"
       end
     else
       flag = false
