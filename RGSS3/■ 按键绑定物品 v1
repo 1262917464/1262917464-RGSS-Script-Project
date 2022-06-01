@@ -1,0 +1,218 @@
+#encoding:utf-8
+#==============================================================================
+# ■ 按键绑定物品 v1 by 1262917464
+#------------------------------------------------------------------------------
+#    本事件由1262917464编写，非书面另外授权一律GPLv3
+#    
+#    前置脚本：
+#    数字式血条 v3.1
+#    66RPG·全键盘脚本
+#    
+#    使用方法：
+#    $Links里的 1 => 251 
+#    意思就是按下 (可能是大键盘)数字键1 使用 251 号变量指定的物品(id)
+#
+#    目前最多写4个键位，理论上可以少，但绝对不能多
+#    暂时不支持字母键绑定物品
+#==============================================================================
+
+$Links = {
+  1 => 251, 
+  2 => 252,
+  3 => 253,
+  4 => 254,
+}
+
+class Scene_Map < Scene_Base
+  alias link_post_start post_start
+  def post_start
+    link_post_start
+    
+    
+    if $links_B == nil || $links_B.disposed?
+      $links_B = Bitmap.new(640,480)
+    end
+    
+    $links_s = Sprite.new
+    $links_s.visible = $game_switches[$HPBOX]
+    $links_s.bitmap = $links_B
+    zoom = 0.9
+    $links_s.x = 12
+    $links_s.y = 4
+    $links_s.zoom_x = zoom
+    $links_s.zoom_y = zoom
+    
+    i = 0
+    $HPB.font.size = 18
+    $HPB.font.color.set(255,255,255,255)
+    $HPB.clear_rect(128, 0, 640, 64)
+    $Links.each_key do |key|
+      
+      $HPB.draw_text(128 + (i > 1 ? 88 : 0), 18 + (i % 2) * 20, 640, 24, "#{key}.")
+      i += 1
+    end
+    $HPB.font.size = 24
+  end
+  
+  alias link_update update
+  def update
+    link_update
+    
+    i = 0
+    $HPB.font.size = 16
+    $Links.each_key do |key|
+      v = $Links[key]
+      $links_B.clear_rect(128 + 28 + (i > 1 ? 88 : 0), 18 + (i % 2) * 20, 24, $Links.length * (24 + 32))
+      $HPB.clear_rect(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 20, 24, $Links.length * (24 + 32))
+      draw_icon($data_items[$game_variables[v]].icon_index, 128 + 24 + (i > 1 ? 96 : 0), 18 + (i % 2) * 20, $links_B) if $game_variables[v] > 0
+      $HPB.font.color.set(255,255,255,255)
+      $HPB.draw_text(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 20, 640, 24, "x#{$game_party.item_number($data_items[$game_variables[v]])}") if $game_variables[v] > 0
+      i += 1
+    end
+    $HPB.font.size = 24
+  end
+end
+
+module UseItem
+  #--------------------------------------------------------------------------
+  # ● 常量（使用效果）
+  #--------------------------------------------------------------------------
+  EFFECT_RECOVER_HP     = 11              # 恢复 HP
+  EFFECT_RECOVER_MP     = 12              # 恢复 MP
+  EFFECT_GAIN_TP        = 13              # 增加 TP
+  EFFECT_ADD_STATE      = 21              # 附加状态
+  EFFECT_REMOVE_STATE   = 22              # 解除状态
+  EFFECT_ADD_BUFF       = 31              # 强化能力
+  EFFECT_ADD_DEBUFF     = 32              # 弱化能力
+  EFFECT_REMOVE_BUFF    = 33              # 解除能力强化
+  EFFECT_REMOVE_DEBUFF  = 34              # 解除能力弱化
+  EFFECT_SPECIAL        = 41              # 特殊效果
+  EFFECT_GROW           = 42              # 能力提升
+  EFFECT_LEARN_SKILL    = 43              # 学会技能
+  EFFECT_COMMON_EVENT   = 44              # 公共事件
+  #--------------------------------------------------------------------------
+  # ● 获取物品的使用者
+  #--------------------------------------------------------------------------
+  def self.user
+    $game_party.movable_members.max_by {|member| member.pha }
+  end
+  #--------------------------------------------------------------------------
+  # ● 获取物品的使用目标数组
+  #--------------------------------------------------------------------------
+  def self.item_target_actors(item)
+    if !item.for_friend?
+      []
+    elsif item.for_all?
+      $game_party.members
+    else
+      [$game_party.leader]
+    end
+  end
+  #--------------------------------------------------------------------------
+  # ● 对角色使用物品
+  #--------------------------------------------------------------------------
+  def self.use_item_to_actors(item)
+    item_target_actors(item).each do |target|
+      item.repeats.times { target.item_apply(user, item) }
+    end
+  end
+  #--------------------------------------------------------------------------
+  # ● 使用物品
+  #--------------------------------------------------------------------------
+  def self.use_item(item)
+    user.use_item(item)
+    use_item_to_actors(item)
+  end
+  #--------------------------------------------------------------------------
+  # ● 判定技能／物品是否有效果
+  #--------------------------------------------------------------------------
+  def self.item_has_any_valid_effects?(user, item)
+    item.effects.any? {|effect| item_effect_test(user, item, effect) }
+  end
+  #--------------------------------------------------------------------------
+  # ● 技能／物品的应用测试
+  #    如果使用目标的 HP 或者 MP 全满时，禁止使用恢复道具。
+  #--------------------------------------------------------------------------
+  def self.item_test(user, item)
+    return false if item.for_dead_friend? != user.dead?
+    return true if item.for_opponent?
+    return true if item.damage.recover? && item.damage.to_hp? && hp < mhp
+    return true if item.damage.recover? && item.damage.to_mp? && mp < mmp
+    return true if item_has_any_valid_effects?(user, item)
+    return false
+  end
+  #--------------------------------------------------------------------------
+  # ● 测试使用效果
+  #--------------------------------------------------------------------------
+  def self.item_effect_test(user, item, effect)
+    case effect.code
+    when EFFECT_RECOVER_HP
+      user.hp < user.mhp || effect.value1 < 0 || effect.value2 < 0
+    when EFFECT_RECOVER_MP
+      user.mp < user.mmp || effect.value1 < 0 || effect.value2 < 0
+    when EFFECT_ADD_STATE
+      user.!state?(effect.data_id)
+    when EFFECT_REMOVE_STATE
+      user.state?(effect.data_id)
+    when EFFECT_ADD_BUFF
+      user.!buff_max?(effect.data_id)
+    when EFFECT_ADD_DEBUFF
+      user.!debuff_max?(effect.data_id)
+    when EFFECT_REMOVE_BUFF
+      user.buff?(effect.data_id)
+    when EFFECT_REMOVE_DEBUFF
+      user.debuff?(effect.data_id)
+    else
+      true
+    end
+  end
+end
+
+  #--------------------------------------------------------------------------
+  # ● キャラクターの取得
+  #     param : -1 ならプレイヤー、0 ならこのイベント、それ以外はイベント ID
+  #--------------------------------------------------------------------------
+  def get_character(param)
+    if param < 0
+      $game_player
+    else
+      events = $game_map.events
+      events[param > 0 ? param : @event_id]
+    end
+  end
+
+def events_play_animation(i,a,t=false)
+  character = get_character(i)
+  if character
+    character.animation_id = a
+    Fiber.yield while character.animation_id > 0 if t
+  end
+end
+
+#==============================================================================
+# ■ Scene_Map
+#------------------------------------------------------------------------------
+# 　地图画面
+#==============================================================================
+
+class Scene_Map < Scene_Base
+  #--------------------------------------------------------------------------
+  # ● 更新场景消退时的过渡
+  #--------------------------------------------------------------------------
+  alias link_update_scene update_scene
+  def update_scene
+    link_update_scene
+    update_call_links unless scene_changing?
+  end
+  
+  def update_call_links
+    $Links.each_key do |key|
+      if Kboard.trigger?(0x30 + key)
+        next if $game_variables[$Links[key]] <= 0
+        next unless UseItem.item_test($game_party.leader, $data_items[$game_variables[$Links[key]]])
+        UseItem.use_item($data_items[$game_variables[$Links[key]]]) 
+        events_play_animation(-1,$data_items[$game_variables[$Links[key]]].animation_id)
+      end
+    end
+  end
+end
