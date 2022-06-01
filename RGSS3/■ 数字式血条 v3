@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 数字式血条 v3 by 1262917464
+# ■ 数字式血条 v3.1 by 1262917464
 #------------------------------------------------------------------------------
 #    本事件由1262917464编写，非书面另外授权一律GPLv3
 #==============================================================================
@@ -13,7 +13,7 @@ class Scene_Map < Scene_Base
     old_post_start
     
     if $HPB == nil || $HPB.disposed?
-      $HPB = Bitmap.new(200,480)
+      $HPB = Bitmap.new(640,480)
       f = Font.new("Sarasa Fixed SC")
       $HPB.font = f
       
@@ -73,7 +73,7 @@ class Scene_Map < Scene_Base
       end
       @leader_last = @leader
       if @hp_l != $game_party.leader.hp
-        $HPB.clear_rect(78,20,100,20)
+        $HPB.clear_rect(78,20,50,20)
         hp = $game_party.leader.hp
         $HPB.font.color.set(255,32,32,255)
         $HPB.draw_text(50,5,100,50,"    #{hp}")
@@ -81,7 +81,7 @@ class Scene_Map < Scene_Base
       end
       if @mp_l != $game_party.leader.mp
         mp = $game_party.leader.mp
-        $HPB.clear_rect(78,40,100,20)
+        $HPB.clear_rect(78,40,50,20)
         $HPB.font.color.set(32,160,214,255)
         $HPB.draw_text(50,25,100,50,"    #{mp}")
         @mp_l = mp
