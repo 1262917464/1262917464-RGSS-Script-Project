@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 按键绑定物品 v1.11 by 1262917464
+# ■ 按键绑定物品 v1.12 by 1262917464
 #------------------------------------------------------------------------------
 #    本事件由1262917464编写，非书面另外授权一律GPLv3
 #    
@@ -21,6 +21,9 @@
 #
 #    v1.11更新：
 #    NOT_USE_LINK号开关开启时无法使用物品
+#
+#    v1.12更新：
+#    修改了一下UI
 #==============================================================================
 
 NOT_USE_LINK = 200
@@ -45,9 +48,9 @@ class Scene_Map < Scene_Base
     $links_s = Sprite.new
     $links_s.visible = $game_switches[$HPBOX]
     $links_s.bitmap = $links_B
-    zoom = 0.9
-    $links_s.x = 12
-    $links_s.y = 4
+    zoom = 0.8
+    $links_s.x = 24
+    $links_s.y = 6
     $links_s.zoom_x = zoom
     $links_s.zoom_y = zoom
     
@@ -71,11 +74,11 @@ class Scene_Map < Scene_Base
     $HPB.font.size = 16
     $Links.each_key do |key|
       v = $Links[key]
-      $links_B.clear_rect(128 + 28 + (i > 1 ? 88 : 0), 18 + (i % 2) * 20, 24, $Links.length * (24 + 32))
-      $HPB.clear_rect(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 20, 24, $Links.length * (24 + 32))
-      draw_icon($data_items[$game_variables[v]].icon_index, 128 + 24 + (i > 1 ? 96 : 0), 18 + (i % 2) * 20, $links_B) if $game_variables[v] > 0
+      $links_B.clear_rect(128 + 28 + (i > 1 ? 108 : 0), 18 + (i % 2) * 24, 24, $Links.length * (24 + 32))
+      $HPB.clear_rect(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 24, 24, $Links.length * (24 + 32))
+      draw_icon($data_items[$game_variables[v]].icon_index, 128 + 24 + (i > 1 ? 108 : 0), 18 + (i % 2) * 24, $links_B) if $game_variables[v] > 0
       $HPB.font.color.set(255,255,255,255)
-      $HPB.draw_text(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 20, 640, 24, "x#{$game_party.item_number($data_items[$game_variables[v]])}") if $game_variables[v] > 0
+      $HPB.draw_text(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 24, 640, 24, "x#{$game_party.item_number($data_items[$game_variables[v]])}") if $game_variables[v] > 0
       i += 1
     end
     $HPB.font.size = 24
