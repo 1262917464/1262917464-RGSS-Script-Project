@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 按键绑定物品 v1.1 by 1262917464
+# ■ 按键绑定物品 v1.11 by 1262917464
 #------------------------------------------------------------------------------
 #    本事件由1262917464编写，非书面另外授权一律GPLv3
 #    
@@ -18,7 +18,12 @@
 #    v1.1更新：
 #    与数字式血条同步隐藏
 #    修正了使用物品的几个BUG
+#
+#    v1.11更新：
+#    NOT_USE_LINK号开关开启时无法使用物品
 #==============================================================================
+
+NOT_USE_LINK = 200
 
 $Links = {
   1 => 251, 
@@ -215,6 +220,7 @@ class Scene_Map < Scene_Base
   def update_call_links
     $Links.each_key do |key|
       if Kboard.trigger?(0x30 + key)
+        return if $game_switches[NOT_USE_LINK]
         next if $game_variables[$Links[key]] <= 0
         next unless UseItem.item_test($game_party.leader, $data_items[$game_variables[$Links[key]]])
         UseItem.use_item($data_items[$game_variables[$Links[key]]]) 
