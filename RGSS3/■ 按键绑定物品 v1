@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 按键绑定物品 v1 by 1262917464
+# ■ 按键绑定物品 v1.1 by 1262917464
 #------------------------------------------------------------------------------
 #    本事件由1262917464编写，非书面另外授权一律GPLv3
 #    
@@ -14,6 +14,10 @@
 #
 #    目前最多写4个键位，理论上可以少，但绝对不能多
 #    暂时不支持字母键绑定物品
+#
+#    v1.1更新：
+#    与数字式血条同步隐藏
+#    修正了使用物品的几个BUG
 #==============================================================================
 
 $Links = {
@@ -70,6 +74,9 @@ class Scene_Map < Scene_Base
       i += 1
     end
     $HPB.font.size = 24
+    if $links_s
+      $links_s.visible = $game_switches[$HPBOX]
+    end
   end
 end
 
@@ -151,13 +158,13 @@ module UseItem
     when EFFECT_RECOVER_MP
       user.mp < user.mmp || effect.value1 < 0 || effect.value2 < 0
     when EFFECT_ADD_STATE
-      user.!state?(effect.data_id)
+      !user.state?(effect.data_id)
     when EFFECT_REMOVE_STATE
       user.state?(effect.data_id)
     when EFFECT_ADD_BUFF
-      user.!buff_max?(effect.data_id)
+      !user.buff_max?(effect.data_id)
     when EFFECT_ADD_DEBUFF
-      user.!debuff_max?(effect.data_id)
+      !user.debuff_max?(effect.data_id)
     when EFFECT_REMOVE_BUFF
       user.buff?(effect.data_id)
     when EFFECT_REMOVE_DEBUFF
