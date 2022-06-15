@@ -1,6 +1,6 @@
 #encoding:utf-8
 #==============================================================================
-# ■ 按键绑定物品 v1.12 by 1262917464
+# ■ 按键绑定物品 v1.2 by 1262917464
 #------------------------------------------------------------------------------
 #    本事件由1262917464编写，非书面另外授权一律GPLv3
 #    
@@ -22,8 +22,10 @@
 #    v1.11更新：
 #    NOT_USE_LINK号开关开启时无法使用物品
 #
-#    v1.12更新：
-#    修改了一下UI
+#    v1.2更新：
+#    物品备注中写<link_CD XXXX>即为快捷使用物品冷却时间，
+#    时间是帧数，与 状态持续时间 一致
+#    修正了UI上的BUG
 #==============================================================================
 
 NOT_USE_LINK = 200
@@ -74,16 +76,23 @@ class Scene_Map < Scene_Base
     $HPB.font.size = 16
     $Links.each_key do |key|
       v = $Links[key]
-      $links_B.clear_rect(128 + 28 + (i > 1 ? 108 : 0), 18 + (i % 2) * 24, 24, $Links.length * (24 + 32))
+      $links_B.clear_rect(128 + 24 + (i > 1 ? 108 : 0), 18 + (i % 2) * 24, 24, $Links.length * (24 + 32))
       $HPB.clear_rect(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 24, 24, $Links.length * (24 + 32))
       draw_icon($data_items[$game_variables[v]].icon_index, 128 + 24 + (i > 1 ? 108 : 0), 18 + (i % 2) * 24, $links_B) if $game_variables[v] > 0
       $HPB.font.color.set(255,255,255,255)
-      $HPB.draw_text(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 24, 640, 24, "x#{$game_party.item_number($data_items[$game_variables[v]])}") if $game_variables[v] > 0
+      $HPB.draw_text(128 + 28 + 24 + (i > 1 ? 88 : 0), 18 + (i % 2) * 20, 640, 24, "x#{$game_party.item_number($data_items[$game_variables[v]])}") if $game_variables[v] > 0
       i += 1
     end
     $HPB.font.size = 24
     if $links_s
       $links_s.visible = $game_switches[$HPBOX]
+    end
+    $Links.each_key do |key|
+      if $game_party.get_links_CDtime($game_variables[$Links[key]]) > 0 
+        p $game_party.get_links_CDtime($game_variables[$Links[key]])
+        $game_party.set_links_CDtime($game_variables[$Links[key]],$game_party.get_links_CDtime($game_variables[$Links[key]]) - 1)
+        next
+      end
     end
   end
 end
@@ -224,11 +233,30 @@ class Scene_Map < Scene_Base
     $Links.each_key do |key|
       if Kboard.trigger?(0x30 + key)
         return if $game_switches[NOT_USE_LINK]
-        next if $game_variables[$Links[key]] <= 0
+        next if $game_variables[$Links[key]] <= 0 or $game_party.get_links_CDtime($game_variables[$Links[key]]) > 0 
         next unless UseItem.item_test($game_party.leader, $data_items[$game_variables[$Links[key]]])
         UseItem.use_item($data_items[$game_variables[$Links[key]]]) 
+        $game_party.set_links_CDtime($game_variables[$Links[key]],$1.to_i) if $data_items[$game_variables[$Links[key]]].note =~ /<link_CD\s*(\d+)>/ 
         events_play_animation(-1,$data_items[$game_variables[$Links[key]]].animation_id)
       end
     end
+  end
+end
+
+
+class Game_Party < Game_Unit
+  attr_accessor :links_CDtime
+  alias links_CDtime_initialize initialize
+  def initialize
+    links_CDtime_initialize
+    @links_CDtime = Game_Variables.new
+  end
+  def get_links_CDtime(id)
+    @links_CDtime = Game_Variables.new if @links_CDtime == nil
+    @links_CDtime[id]
+  end
+  def set_links_CDtime(id,v)
+    @links_CDtime = Game_Variables.new if @links_CDtime == nil
+    @links_CDtime[id] = v
   end
 end
