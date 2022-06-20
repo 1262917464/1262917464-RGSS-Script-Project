@@ -26,6 +26,9 @@
 #    物品备注中写<link_CD XXXX>即为快捷使用物品冷却时间，
 #    时间是帧数，与 状态持续时间 一致
 #    修正了UI上的BUG
+#
+#    v1.21更新：
+#    修复了物品数为0时还能用的BUG
 #==============================================================================
 
 NOT_USE_LINK = 200
@@ -234,6 +237,7 @@ class Scene_Map < Scene_Base
       if Kboard.trigger?(0x30 + key)
         return if $game_switches[NOT_USE_LINK]
         next if $game_variables[$Links[key]] <= 0 or $game_party.get_links_CDtime($game_variables[$Links[key]]) > 0 
+        next if $game_party.item_number($data_items[$game_variables[$Links[key]]]) <= 0
         next unless UseItem.item_test($game_party.leader, $data_items[$game_variables[$Links[key]]])
         UseItem.use_item($data_items[$game_variables[$Links[key]]]) 
         $game_party.set_links_CDtime($game_variables[$Links[key]],$1.to_i) if $data_items[$game_variables[$Links[key]]].note =~ /<link_CD\s*(\d+)>/ 
